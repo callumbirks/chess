@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.canvas.Canvas?>
+
+<?import javafx.scene.shape.SVGPath?>
+<StackPane xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="com.callumbirks.gui.Controller" stylesheets="primary.css"
+           fx:id="container">
+   <VBox>
+      <HBox styleClass="container-hbox" onMousePressed="#clickWindow" onMouseDragged="#dragWindow">
+         <HBox styleClass="window-btn-hbox">
+            <StackPane styleClass="button-stack">
+               <SVGPath content="M 0,0 L 16,16 M 16,0 L 0,16" stroke="white" styleClass="svg"/>
+               <Button onAction="#closeWindow" styleClass="close-button"/>
+            </StackPane>
+            <StackPane styleClass="button-stack">
+               <SVGPath content="M 0,0 h 16 v 16 h -16 z" stroke="white" fill="#1E3A40"/>
+               <Button onAction="#maxWindow" styleClass="max-button"/>
+            </StackPane>
+         </HBox>
+         <HBox styleClass="game-btn-hbox">
+            <Button onAction="#openSettings" text="Settings"/>
+            <Button onAction="#clickTimer" text="Timer"/>
+            <Button onAction="#startGame" text="Start"/>
+         </HBox>
+      </HBox>
+      <Canvas fx:id="canvas" width="800" height="800" onMouseClicked="#gameMouseClick"/>
+   </VBox>
+</StackPane>
