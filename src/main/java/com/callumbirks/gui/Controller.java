@@ -2,6 +2,7 @@ package com.callumbirks.gui;
 
 import com.callumbirks.game.ChessPiece;
 import com.callumbirks.game.Game;
+import com.callumbirks.game.PieceType;
 import javafx.css.CssMetaData;
 import javafx.css.Styleable;
 import javafx.event.ActionEvent;
@@ -41,7 +42,8 @@ public class Controller implements Initializable {
 
     private Game game;
     private boolean holdingPiece = false;
-    private List<int[]> availableSquares;
+    private ChessPiece currentPiece;
+    private List<ChessPiece> availableSquares;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -57,13 +59,23 @@ public class Controller implements Initializable {
         gc.clearRect(0,0,WIDTH, HEIGHT);
         drawBoard();
         drawPieces();
+        drawAvailableSquares();
+    }
+
+    private void drawAvailableSquares() {
+        if(availableSquares.isEmpty())
+            return;
+        gc.setFill(Color.GREY);
+        for(ChessPiece piece : availableSquares) {
+            gc.fillOval(piece.getX()*PIXEL_SIZE + 40, piece.getY()*PIXEL_SIZE + 40, 20, 20);
+        }
     }
 
     private void drawPieces() {
         ChessPiece[][] pieces = game.getPieces();
         for(ChessPiece[] row : pieces) {
             for(ChessPiece piece : row) {
-                if(piece != null) {
+                if(piece.getPieceType() != PieceType.EMPTY) {
                     Image pieceImage = (SVGLoader.loadSVG(String.format("/svg/pieces/%s-%s.svg", piece.getColour(), piece.getPieceType().toString())));
                     gc.drawImage(pieceImage, piece.getX()*PIXEL_SIZE, piece.getY()*PIXEL_SIZE);
                 }
@@ -120,13 +132,36 @@ public class Controller implements Initializable {
 
     public void gameMouseClick(MouseEvent mouseEvent) {
         ChessPiece piece = game.getPiece((int) mouseEvent.getX() / PIXEL_SIZE, (int) mouseEvent.getY() / PIXEL_SIZE);
+        System.out.println(piece.getPieceType().toString());
         if(!holdingPiece) {
-            if(piece == null)
+            if(piece.getPieceType() == PieceType.EMPTY) {
+                currentPiece = null;
+                availableSquares.clear();
                 return;
+            }
             else {
                 holdingPiece = true;
+                currentPiece = piece;
                 availableSquares = game.getMoves(piece);
+                if(availableSquares.isEmpty())
+                    holdingPiece = false;
             }
         }
+        else {
+            if(piece.getColour() == currentPiece.getColour()) {
+                holdingPiece = false;
+                gameMouseClick(mouseEvent);
+            }
+            if(availableSquares.contains(piece)) {
+                game.movePiece(currentPiece, new int[]{piece.getX(), piece.getY()});
+                availableSquares.clear();
+                holdingPiece = false;
+            }
+            else if(piece.getPieceType() == PieceType.EMPTY) {
+                holdingPiece = false;
+                gameMouseClick(mouseEvent);
+            }
+        }
+        render();
     }
 }

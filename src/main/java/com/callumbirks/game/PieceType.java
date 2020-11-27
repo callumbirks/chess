@@ -1,6 +1,7 @@
 package com.callumbirks.game;
 
 public enum PieceType {
+    EMPTY,
     PAWN,
     KNIGHT,
     BISHOP,
@@ -11,6 +12,7 @@ public enum PieceType {
     @Override
     public String toString() {
         return switch(this) {
+            case EMPTY -> "empty";
             case PAWN -> "pawn";
             case KNIGHT -> "knight";
             case BISHOP -> "bishop";

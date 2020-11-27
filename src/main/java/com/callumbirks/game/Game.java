@@ -24,6 +24,15 @@ public class Game {
         initPawns(BLACK);
         initBackRow(WHITE);
         initPawns(WHITE);
+        initEmpty();
+    }
+
+    private void initEmpty() {
+        for(int i = 2; i < 6; i++) {
+            for(int j = 0; j < 8; j++) {
+                pieces[i][j] = new ChessPiece(EMPTY, i, j);
+            }
+        }
     }
 
     private void initBackRow(Colour colour) {
@@ -72,18 +81,32 @@ public class Game {
     }
 
     public void movePiece(ChessPiece piece, int[] newPos) {
-        pieces[piece.getX()][piece.getY()].setPosition(newPos[0], newPos[1]);
+        ChessPiece newPiece = new ChessPiece(piece.getColour(), piece.getPieceType(), newPos[0], newPos[1]);
+        if(pieces[newPos[0]][newPos[1]].getPieceType() == EMPTY) {
+            pieces[piece.getX()][piece.getY()] = pieces[newPos[0]][newPos[1]];
+            pieces[piece.getX()][piece.getY()].setPosition(piece.getX(), piece.getY());
+        }
+        else {
+            pieces[piece.getX()][piece.getY()] = new ChessPiece(EMPTY, piece.getX(), piece.getY());
+        }
+        pieces[newPos[0]][newPos[1]] = newPiece;
     }
 
-    public List<int[]> getMoves(ChessPiece piece) {
-        List<int[]> validMoves = new ArrayList<>();
+    public List<ChessPiece> getMoves(ChessPiece piece) {
+        List<ChessPiece> validMoves = new ArrayList<>();
         for(ChessPiece[] file : pieces) {
             for(ChessPiece square : file) {
-                if(square == null || square.getColour() != piece.getColour()) {
-                    int[] newPos = { square.getX(), square.getY() };
-
+                int[] newPos = { square.getX(), square.getY() };
+                if(square.getPieceType() == EMPTY) {
+                    if(piece.isValidMove(square, false, pieces))
+                        validMoves.add(pieces[newPos[0]][newPos[1]]);
+                }
+                else if(square.getColour() != piece.getColour()) {
+                    if(piece.isValidMove(square, true, pieces))
+                        validMoves.add(pieces[newPos[0]][newPos[1]]);
                 }
             }
         }
+        return validMoves;
     }
 }
