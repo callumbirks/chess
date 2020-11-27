@@ -98,15 +98,117 @@ public class Game {
             for(ChessPiece square : file) {
                 int[] newPos = { square.getX(), square.getY() };
                 if(square.getPieceType() == EMPTY) {
-                    if(piece.isValidMove(square, false, pieces))
+                    if(isValidMove(piece, square, false))
                         validMoves.add(pieces[newPos[0]][newPos[1]]);
                 }
                 else if(square.getColour() != piece.getColour()) {
-                    if(piece.isValidMove(square, true, pieces))
+                    if(isValidMove(piece, square, true))
                         validMoves.add(pieces[newPos[0]][newPos[1]]);
                 }
             }
         }
         return validMoves;
+    }
+
+    public boolean isValidMove(ChessPiece current, ChessPiece newPos, boolean takesPiece) {
+        int xDiff = xDiff(newPos.getX(), current);
+        int yDiff = yDiff(newPos.getY(), current);
+        if (current.getColour() == Colour.WHITE)
+            xDiff *= -1;
+        final boolean isStraightLine = (Math.abs(xDiff) > 0 && Math.abs(yDiff) == 0) ||
+                (Math.abs(xDiff) == 0 && Math.abs(yDiff) > 0);
+        final boolean isDiagonal = Math.abs(xDiff) == Math.abs(yDiff);
+        switch (current.getPieceType()) {
+            case PAWN -> {
+                if (takesPiece) {
+                    return Math.abs(yDiff) == 1 && xDiff == 1;
+                } else if (hasPawnMoved(current)) {
+                    return yDiff == 0 && xDiff == 1;
+                } else {
+                    return yDiff == 0 && (xDiff == 1 || xDiff == 2);
+                }
+            }
+            case KNIGHT -> {
+                return (Math.abs(xDiff) == 2 && Math.abs(yDiff) == 1) ||
+                        (Math.abs(xDiff) == 1 && Math.abs(yDiff) == 2);
+            }
+            case BISHOP -> {
+                return isDiagonal && !pieceBlocking(current, newPos, pieces, current.getPieceType());
+            }
+            case ROOK -> {
+                return isStraightLine && !pieceBlocking(current, newPos, pieces, current.getPieceType());
+            }
+            case QUEEN -> {
+                return (isDiagonal && !pieceBlocking(current, newPos, pieces, PieceType.BISHOP) ||
+                        (isStraightLine && !pieceBlocking(current, newPos, pieces, PieceType.ROOK)));
+            }
+            case KING -> {
+                return (Math.abs(xDiff) <= 1 && Math.abs(yDiff) <= 1);
+            }
+        }
+        return false;
+    }
+
+    private boolean pieceBlocking(ChessPiece current, ChessPiece newPos, ChessPiece[][] pieces, PieceType pieceType) {
+        ChessPiece blockingPiece = null;
+        for (ChessPiece[] file : pieces) {
+            for (ChessPiece piece : file) {
+                switch (pieceType) {
+                    case BISHOP -> {
+                        if (Math.abs(xDiff(piece.getX(), current)) == Math.abs(yDiff(piece.getY(), current))) {
+                            blockingPiece = (piece.getPieceType() != PieceType.EMPTY ? piece : blockingPiece);
+                            if (blockingPiece != null && isBlocked(current, newPos, blockingPiece)) return true;
+                        }
+                    }
+                    case ROOK -> {
+                        if ((Math.abs(xDiff(piece.getX(), current)) == 0 && Math.abs(yDiff(piece.getY(), current)) > 0) ||
+                                (Math.abs(xDiff(piece.getX(), current)) > 0 && Math.abs(yDiff(piece.getY(), current)) == 0)) {
+                            blockingPiece = (piece.getPieceType() != PieceType.EMPTY ? piece : blockingPiece);
+                            if (blockingPiece != null && isBlocked(current, newPos, blockingPiece)) return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean isBlocked(ChessPiece current, ChessPiece newPos, ChessPiece blockingPiece) {
+        int xDiff = xDiff(newPos.getX(), current);
+        int yDiff = yDiff(newPos.getY(), current);
+        final float blockingPieceXDirection = Math.signum(xDiff(blockingPiece.getX(), current));
+        final float blockingPieceYDirection = Math.signum(yDiff(blockingPiece.getY(), current));
+
+        if (Math.signum(xDiff) == blockingPieceXDirection &&
+                Math.signum(yDiff) == blockingPieceYDirection) {
+            final int xDistanceToBlockingPiece = Math.abs(xDiff(blockingPiece.getX(), current));
+            final int yDistanceToBlockingPiece = Math.abs(yDiff(blockingPiece.getY(), current));
+            if(current.getColour() != blockingPiece.getColour()) {
+                return (Math.abs(xDiff) > xDistanceToBlockingPiece &&
+                        Math.abs(yDiff) > yDistanceToBlockingPiece) ||
+                        (Math.abs(xDiff) >= xDistanceToBlockingPiece &&
+                                Math.abs(yDiff) > yDistanceToBlockingPiece) ||
+                        (Math.abs(xDiff) > xDistanceToBlockingPiece &&
+                                Math.abs(yDiff) >= yDistanceToBlockingPiece);
+            }
+            else return Math.abs(xDiff) >= xDistanceToBlockingPiece &&
+                    Math.abs(yDiff) >= yDistanceToBlockingPiece;
+        }
+        return false;
+    }
+
+    private int xDiff(int x, ChessPiece current) {
+        return x - current.getX();
+    }
+
+    private int yDiff(int y, ChessPiece current) {
+        return y - current.getY();
+    }
+
+    private boolean hasPawnMoved(ChessPiece piece) {
+        return switch (piece.getColour()) {
+            case WHITE -> piece.getX() != 6;
+            case BLACK -> piece.getX() != 1;
+        };
     }
 }
