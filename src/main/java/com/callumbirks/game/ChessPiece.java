@@ -46,14 +46,11 @@ public class ChessPiece {
         if (o == null || getClass() != o.getClass()) return false;
         ChessPiece that = (ChessPiece) o;
         return colour == that.colour &&
-                pieceType == that.pieceType &&
-                Arrays.equals(position, that.position);
+                pieceType == that.pieceType;
     }
 
     @Override
     public int hashCode() {
-        int result = Objects.hash(colour, pieceType);
-        result = 31 * result + Arrays.hashCode(position);
-        return result;
+        return Objects.hash(colour, pieceType);
     }
 }
