@@ -10,12 +10,23 @@ public class Game {
     private ChessPiece[][] pieces;
     private GameSettings settings;
     private boolean started;
+    private boolean inCheck;
+    private List<ChessPiece> checkingPieces;
 
     public Game() {
         pieces = new ChessPiece[8][8];
         settings = new GameSettings();
         initialisePieces();
         started = false;
+        checkingPieces = new ArrayList<>();
+    }
+
+    public boolean isInCheck() {
+        return inCheck;
+    }
+
+    public void setInCheck(boolean inCheck) {
+        this.inCheck = inCheck;
     }
 
     public ChessPiece[][] getPieces() {
@@ -52,6 +63,7 @@ public class Game {
             pieces[piece.getX()][piece.getY()] = new ChessPiece(EMPTY, piece.getX(), piece.getY());
         }
         pieces[newPos[0]][newPos[1]] = newPiece;
+        getMoves(newPiece);
     }
 
     public List<ChessPiece> getMoves(ChessPiece piece) {
@@ -67,6 +79,14 @@ public class Game {
                     if(isValidMove(piece, square, true))
                         validMoves.add(pieces[newPos[0]][newPos[1]]);
                 }
+            }
+        }
+        ChessPiece whiteKing = new ChessPiece(WHITE, KING, 0, 0);
+        ChessPiece blackKing = new ChessPiece(BLACK, KING, 0, 0);
+        for(ChessPiece move : validMoves) {
+            if(move.equals(whiteKing) || move.equals(blackKing)) {
+                setInCheck(true);
+                checkingPieces.add(piece);
             }
         }
         return validMoves;
