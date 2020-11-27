@@ -149,6 +149,8 @@ public class Controller implements Initializable {
     public void startGame() {
         if(game.isTimerEnabled())
             startTimer();
+        updateTimer();
+        game.startGame();
     }
 
     public void clickWindow(MouseEvent mouseEvent) {
@@ -168,6 +170,8 @@ public class Controller implements Initializable {
     }
 
     public void gameMouseClick(MouseEvent mouseEvent) {
+        if(!game.isStarted())
+            return;
         ChessPiece piece = game.getPiece((int) mouseEvent.getX() / PIXEL_SIZE, (int) mouseEvent.getY() / PIXEL_SIZE);
         if(!holdingPiece) {
             if(piece.getPieceType() == PieceType.EMPTY) {
