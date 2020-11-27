@@ -9,11 +9,67 @@ import static com.callumbirks.game.PieceType.*;
 public class Game {
     private ChessPiece[][] pieces;
     private GameSettings settings;
+    private boolean started;
 
     public Game() {
         pieces = new ChessPiece[8][8];
         settings = new GameSettings();
         initialisePieces();
+        started = false;
+    }
+
+    public ChessPiece[][] getPieces() {
+        return pieces;
+    }
+
+    public ChessPiece getPiece(int x, int y) {
+        return pieces[x][y];
+    }
+
+    public boolean isStarted() {
+        return started;
+    }
+
+    public void startGame() {
+        started = true;
+    }
+
+    public boolean isTimerEnabled() {
+        return settings.isTimerEnabled();
+    }
+
+    public void setTimerEnabled(boolean b) {
+        settings.setTimerEnabled(b);
+    }
+
+    public void movePiece(ChessPiece piece, int[] newPos) {
+        ChessPiece newPiece = new ChessPiece(piece.getColour(), piece.getPieceType(), newPos[0], newPos[1]);
+        if(pieces[newPos[0]][newPos[1]].getPieceType() == EMPTY) {
+            pieces[piece.getX()][piece.getY()] = pieces[newPos[0]][newPos[1]];
+            pieces[piece.getX()][piece.getY()].setPosition(piece.getX(), piece.getY());
+        }
+        else {
+            pieces[piece.getX()][piece.getY()] = new ChessPiece(EMPTY, piece.getX(), piece.getY());
+        }
+        pieces[newPos[0]][newPos[1]] = newPiece;
+    }
+
+    public List<ChessPiece> getMoves(ChessPiece piece) {
+        List<ChessPiece> validMoves = new ArrayList<>();
+        for(ChessPiece[] file : pieces) {
+            for(ChessPiece square : file) {
+                int[] newPos = { square.getX(), square.getY() };
+                if(square.getPieceType() == EMPTY) {
+                    if(isValidMove(piece, square, false))
+                        validMoves.add(pieces[newPos[0]][newPos[1]]);
+                }
+                else if(square.getColour() != piece.getColour()) {
+                    if(isValidMove(piece, square, true))
+                        validMoves.add(pieces[newPos[0]][newPos[1]]);
+                }
+            }
+        }
+        return validMoves;
     }
 
     private void initialisePieces() {
@@ -57,53 +113,7 @@ public class Game {
         }
     }
 
-    public ChessPiece[][] getPieces() {
-        return pieces;
-    }
-
-    public ChessPiece getPiece(int x, int y) {
-        return pieces[x][y];
-    }
-
-    public boolean isTimerEnabled() {
-        return settings.isTimerEnabled();
-    }
-
-    public void setTimerEnabled(boolean b) {
-        settings.setTimerEnabled(b);
-    }
-
-    public void movePiece(ChessPiece piece, int[] newPos) {
-        ChessPiece newPiece = new ChessPiece(piece.getColour(), piece.getPieceType(), newPos[0], newPos[1]);
-        if(pieces[newPos[0]][newPos[1]].getPieceType() == EMPTY) {
-            pieces[piece.getX()][piece.getY()] = pieces[newPos[0]][newPos[1]];
-            pieces[piece.getX()][piece.getY()].setPosition(piece.getX(), piece.getY());
-        }
-        else {
-            pieces[piece.getX()][piece.getY()] = new ChessPiece(EMPTY, piece.getX(), piece.getY());
-        }
-        pieces[newPos[0]][newPos[1]] = newPiece;
-    }
-
-    public List<ChessPiece> getMoves(ChessPiece piece) {
-        List<ChessPiece> validMoves = new ArrayList<>();
-        for(ChessPiece[] file : pieces) {
-            for(ChessPiece square : file) {
-                int[] newPos = { square.getX(), square.getY() };
-                if(square.getPieceType() == EMPTY) {
-                    if(isValidMove(piece, square, false))
-                        validMoves.add(pieces[newPos[0]][newPos[1]]);
-                }
-                else if(square.getColour() != piece.getColour()) {
-                    if(isValidMove(piece, square, true))
-                        validMoves.add(pieces[newPos[0]][newPos[1]]);
-                }
-            }
-        }
-        return validMoves;
-    }
-
-    public boolean isValidMove(ChessPiece current, ChessPiece newPos, boolean takesPiece) {
+    private boolean isValidMove(ChessPiece current, ChessPiece newPos, boolean takesPiece) {
         int xDiff = xDiff(newPos.getX(), current);
         int yDiff = yDiff(newPos.getY(), current);
         if (current.getColour() == Colour.WHITE)
