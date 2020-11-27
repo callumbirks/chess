@@ -4,8 +4,8 @@ import java.util.Arrays;
 import java.util.Objects;
 
 public class ChessPiece {
-    private Colour colour;
-    private PieceType pieceType;
+    private final Colour colour;
+    private final PieceType pieceType;
     private int[] position;
 
     public ChessPiece(PieceType pieceType, int x, int y) {

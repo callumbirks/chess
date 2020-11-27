@@ -1,10 +1,12 @@
 package com.callumbirks.gui;
 
 import com.callumbirks.game.ChessPiece;
+import com.callumbirks.game.Colour;
 import com.callumbirks.game.Game;
 import com.callumbirks.game.PieceType;
-import javafx.css.CssMetaData;
-import javafx.css.Styleable;
+import javafx.animation.Animation;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.fxml.FXML;
@@ -13,15 +15,12 @@ import javafx.scene.Node;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
-import javafx.scene.paint.Paint;
-import javafx.scene.shape.Shape;
 import javafx.stage.Window;
+import javafx.util.Duration;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -30,6 +29,10 @@ import java.util.ResourceBundle;
 
 public class Controller implements Initializable {
 
+    @FXML
+    private Button timerButton;
+    @FXML
+    private ProgressBar progressBar;
     @FXML
     private Canvas canvas;
     private GraphicsContext gc;
@@ -41,9 +44,12 @@ public class Controller implements Initializable {
     private static final int PIXEL_SIZE = 100;
 
     private Game game;
+    private Timeline timer;
+    private int remainingSeconds;
     private boolean holdingPiece = false;
     private ChessPiece currentPiece;
     private List<ChessPiece> availableSquares;
+    private Colour currentTurn;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -52,7 +58,21 @@ public class Controller implements Initializable {
         HEIGHT = (int) canvas.getHeight();
         game = new Game();
         availableSquares = new ArrayList<>();
+        currentTurn = Colour.WHITE;
+        timer = new Timeline();
+        timer.setCycleCount(60);
+        timer.getKeyFrames().add(new KeyFrame(Duration.seconds(1), e -> {
+            remainingSeconds -= 1;
+            render();
+            System.out.println(remainingSeconds);
+        }));
+        //TODO: timer.setOnFinished();
         render();
+    }
+
+    public void startTimer() {
+        remainingSeconds = 60;
+        timer.play();
     }
 
     private void render() {
@@ -60,12 +80,20 @@ public class Controller implements Initializable {
         drawBoard();
         drawPieces();
         drawAvailableSquares();
+        drawTimer();
+    }
+
+    private void drawTimer() {
+        if(timer.getStatus() == Animation.Status.RUNNING)
+            progressBar.setProgress(((float) remainingSeconds / 60));
+        else
+            progressBar.setProgress(0);
     }
 
     private void drawAvailableSquares() {
         if(availableSquares.isEmpty())
             return;
-        gc.setFill(Color.GREY);
+        gc.setFill(Color.web("#83A3AA",0.9));
         for(ChessPiece piece : availableSquares) {
             gc.fillOval(piece.getX()*PIXEL_SIZE + 40, piece.getY()*PIXEL_SIZE + 40, 20, 20);
         }
@@ -84,7 +112,7 @@ public class Controller implements Initializable {
     }
 
     private void drawBoard() {
-        gc.setFill(Paint.valueOf("#488B99"));
+        gc.setFill(Color.web("#488B99"));
         for(int i = 0; i < 8; i++) {
             for(int j = 0; j < 8; j++) {
                 if((i % 2 == 0 && j % 2 == 1) || i % 2 == 1 && j % 2 == 0)
@@ -94,7 +122,7 @@ public class Controller implements Initializable {
         }
     }
 
-    public void closeWindow(ActionEvent actionEvent) {
+    public void closeWindow() {
         System.exit(0);
     }
 
@@ -103,15 +131,22 @@ public class Controller implements Initializable {
         stage.centerOnScreen();
     }
 
-    public void openSettings(ActionEvent actionEvent) {
+    public void openSettings() {
     }
 
-    public void clickTimer(ActionEvent actionEvent) {
+    public void clickTimer() {
         game.setTimerEnabled(!game.isTimerEnabled());
-        System.out.println(game.isTimerEnabled());
+        if(game.isTimerEnabled()) {
+            timerButton.getStyleClass().add("timer-on");
+        }
+        else {
+            timerButton.getStyleClass().remove("timer-on");
+        }
     }
 
-    public void startGame(ActionEvent actionEvent) {
+    public void startGame() {
+        if(game.isTimerEnabled())
+            timer.play();
     }
 
     public void clickWindow(MouseEvent mouseEvent) {
@@ -132,7 +167,6 @@ public class Controller implements Initializable {
 
     public void gameMouseClick(MouseEvent mouseEvent) {
         ChessPiece piece = game.getPiece((int) mouseEvent.getX() / PIXEL_SIZE, (int) mouseEvent.getY() / PIXEL_SIZE);
-        System.out.println(piece.getPieceType().toString());
         if(!holdingPiece) {
             if(piece.getPieceType() == PieceType.EMPTY) {
                 currentPiece = null;
@@ -140,11 +174,13 @@ public class Controller implements Initializable {
                 return;
             }
             else {
-                holdingPiece = true;
-                currentPiece = piece;
-                availableSquares = game.getMoves(piece);
-                if(availableSquares.isEmpty())
-                    holdingPiece = false;
+                if(currentTurn == piece.getColour()) {
+                    holdingPiece = true;
+                    currentPiece = piece;
+                    availableSquares = game.getMoves(piece);
+                    if (availableSquares.isEmpty())
+                        holdingPiece = false;
+                }
             }
         }
         else {
@@ -156,6 +192,11 @@ public class Controller implements Initializable {
                 game.movePiece(currentPiece, new int[]{piece.getX(), piece.getY()});
                 availableSquares.clear();
                 holdingPiece = false;
+                currentTurn = (currentTurn == Colour.WHITE ? Colour.BLACK : Colour.WHITE);
+                if(timer.getStatus() == Animation.Status.RUNNING)
+                    timer.stop();
+                if(game.isTimerEnabled())
+                    startTimer();
             }
             else if(piece.getPieceType() == PieceType.EMPTY) {
                 holdingPiece = false;

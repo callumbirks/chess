@@ -1,7 +1,5 @@
 package com.callumbirks.game;
 
-import javafx.animation.Timeline;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,7 +8,6 @@ import static com.callumbirks.game.PieceType.*;
 
 public class Game {
     private ChessPiece[][] pieces;
-    private Timeline timer;
     private GameSettings settings;
 
     public Game() {
@@ -62,10 +59,6 @@ public class Game {
 
     public ChessPiece[][] getPieces() {
         return pieces;
-    }
-
-    public void setPieces(ChessPiece[][] pieces) {
-        this.pieces = pieces;
     }
 
     public ChessPiece getPiece(int x, int y) {
@@ -133,14 +126,14 @@ public class Game {
                         (Math.abs(xDiff) == 1 && Math.abs(yDiff) == 2);
             }
             case BISHOP -> {
-                return isDiagonal && !pieceBlocking(current, newPos, pieces, current.getPieceType());
+                return isDiagonal && pieceNotBlocked(current, newPos, pieces, current.getPieceType());
             }
             case ROOK -> {
-                return isStraightLine && !pieceBlocking(current, newPos, pieces, current.getPieceType());
+                return isStraightLine && pieceNotBlocked(current, newPos, pieces, current.getPieceType());
             }
             case QUEEN -> {
-                return (isDiagonal && !pieceBlocking(current, newPos, pieces, PieceType.BISHOP) ||
-                        (isStraightLine && !pieceBlocking(current, newPos, pieces, PieceType.ROOK)));
+                return (isDiagonal && pieceNotBlocked(current, newPos, pieces, PieceType.BISHOP) ||
+                        (isStraightLine && pieceNotBlocked(current, newPos, pieces, PieceType.ROOK)));
             }
             case KING -> {
                 return (Math.abs(xDiff) <= 1 && Math.abs(yDiff) <= 1);
@@ -149,7 +142,7 @@ public class Game {
         return false;
     }
 
-    private boolean pieceBlocking(ChessPiece current, ChessPiece newPos, ChessPiece[][] pieces, PieceType pieceType) {
+    private boolean pieceNotBlocked(ChessPiece current, ChessPiece newPos, ChessPiece[][] pieces, PieceType pieceType) {
         ChessPiece blockingPiece = null;
         for (ChessPiece[] file : pieces) {
             for (ChessPiece piece : file) {
@@ -157,20 +150,20 @@ public class Game {
                     case BISHOP -> {
                         if (Math.abs(xDiff(piece.getX(), current)) == Math.abs(yDiff(piece.getY(), current))) {
                             blockingPiece = (piece.getPieceType() != PieceType.EMPTY ? piece : blockingPiece);
-                            if (blockingPiece != null && isBlocked(current, newPos, blockingPiece)) return true;
+                            if (blockingPiece != null && isBlocked(current, newPos, blockingPiece)) return false;
                         }
                     }
                     case ROOK -> {
                         if ((Math.abs(xDiff(piece.getX(), current)) == 0 && Math.abs(yDiff(piece.getY(), current)) > 0) ||
                                 (Math.abs(xDiff(piece.getX(), current)) > 0 && Math.abs(yDiff(piece.getY(), current)) == 0)) {
                             blockingPiece = (piece.getPieceType() != PieceType.EMPTY ? piece : blockingPiece);
-                            if (blockingPiece != null && isBlocked(current, newPos, blockingPiece)) return true;
+                            if (blockingPiece != null && isBlocked(current, newPos, blockingPiece)) return false;
                         }
                     }
                 }
             }
         }
-        return false;
+        return true;
     }
 
     private boolean isBlocked(ChessPiece current, ChessPiece newPos, ChessPiece blockingPiece) {

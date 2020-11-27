@@ -7,9 +7,9 @@
 <?import javafx.scene.canvas.Canvas?>
 
 <?import javafx.scene.shape.SVGPath?>
+<?import javafx.scene.control.ProgressBar?>
 <StackPane xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1"
-           fx:controller="com.callumbirks.gui.Controller" stylesheets="primary.css"
-           fx:id="container">
+           fx:controller="com.callumbirks.gui.Controller" stylesheets="primary.css">
    <VBox>
       <HBox styleClass="container-hbox" onMousePressed="#clickWindow" onMouseDragged="#dragWindow">
          <HBox styleClass="window-btn-hbox">
@@ -24,7 +24,8 @@
          </HBox>
          <HBox styleClass="game-btn-hbox">
             <Button onAction="#openSettings" text="Settings"/>
-            <Button onAction="#clickTimer" text="Timer"/>
+            <ProgressBar fx:id="progressBar" progress="0"/>
+            <Button onAction="#clickTimer" text="Timer" fx:id="timerButton"/>
             <Button onAction="#startGame" text="Start"/>
          </HBox>
       </HBox>
