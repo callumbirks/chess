@@ -63,10 +63,13 @@ public class Controller implements Initializable {
         timer.setCycleCount(60);
         timer.getKeyFrames().add(new KeyFrame(Duration.seconds(1), e -> {
             remainingSeconds -= 1;
-            render();
-            System.out.println(remainingSeconds);
+            updateTimer();
         }));
-        //TODO: timer.setOnFinished();
+        timer.setOnFinished(e -> {
+            currentTurn = (currentTurn == Colour.WHITE ? Colour.BLACK : Colour.WHITE);
+            availableSquares.clear();
+            render();
+        });
         render();
     }
 
@@ -80,10 +83,9 @@ public class Controller implements Initializable {
         drawBoard();
         drawPieces();
         drawAvailableSquares();
-        drawTimer();
     }
 
-    private void drawTimer() {
+    private void updateTimer() {
         if(timer.getStatus() == Animation.Status.RUNNING)
             progressBar.setProgress(((float) remainingSeconds / 60));
         else
@@ -146,7 +148,7 @@ public class Controller implements Initializable {
 
     public void startGame() {
         if(game.isTimerEnabled())
-            timer.play();
+            startTimer();
     }
 
     public void clickWindow(MouseEvent mouseEvent) {
@@ -184,7 +186,7 @@ public class Controller implements Initializable {
             }
         }
         else {
-            if(piece.getColour() == currentPiece.getColour()) {
+            if(piece.getColour() == currentTurn) {
                 holdingPiece = false;
                 gameMouseClick(mouseEvent);
             }
@@ -193,9 +195,9 @@ public class Controller implements Initializable {
                 availableSquares.clear();
                 holdingPiece = false;
                 currentTurn = (currentTurn == Colour.WHITE ? Colour.BLACK : Colour.WHITE);
-                if(timer.getStatus() == Animation.Status.RUNNING)
+                if (timer.getStatus() == Animation.Status.RUNNING)
                     timer.stop();
-                if(game.isTimerEnabled())
+                if (game.isTimerEnabled())
                     startTimer();
             }
             else if(piece.getPieceType() == PieceType.EMPTY) {
