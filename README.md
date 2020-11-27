@@ -4,3 +4,5 @@ A GUI chess game written in Java, using JavaFX as the GUI framework. Game is des
 ![Screenshot 1](media/screen1.png)
 
 ![Screenshot 2](media/screen2.png)
+
+![Screenshot 3](media/screen3.png)
